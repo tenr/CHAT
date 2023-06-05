@@ -2,12 +2,27 @@ import { ChatSidebar } from "../../components/ChatSidebar/ChatsSdebar";
 import Head from "next/head";
 import { streamReader } from "openai-edge-stream";
 import { useState } from "react";
+import { v4 as uuid } from "uuid";
+import { Message } from "../../components/Message/Message";
 
 export default function ChatPage() {
   const [messageText, setMessageText] = useState("");
+  const [incomingMessage, setIncomingMessage] = useState("");
+  const [newChatMessages, setNewChatMessages] = useState([]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setNewChatMessages((prev) => {
+      const newChatMessages = [
+        ...prev,
+        {
+          _id: uuid(),
+          role: "user",
+          content: messageText,
+        },
+      ];
+      return newChatMessages;
+    });
     console.log(messageText);
     const response = await fetch(`/api/chat/sendMessage`, {
       method: "POST",
@@ -21,9 +36,10 @@ export default function ChatPage() {
       return;
     }
 
-    const reader = data.getreader();
+    const reader = data.getReader();
     await streamReader(reader, (message) => {
-      console.log("MESSAGE:", message);
+      console.log("MESSAGE: ", message);
+      setIncomingMessage((s) => `${s}${message.content}`);
     });
   };
 
@@ -35,7 +51,16 @@ export default function ChatPage() {
       <div className="grid h-screen grid-cols-[260px_1fr]">
         <ChatSidebar />
         <div className=" flex flex-col bg-gray-700">
-          <div className="flex-1">chat window</div>
+          <div className="flex-1 text-white">
+            {newChatMessages.map((message) => (
+              <Message
+                key={message._id}
+                role={message.role}
+                content={message.content}
+              />
+            ))}
+            <Message role="assistant" content={incomingMessage} />
+          </div>
           <footer className="bg-gray-800 p-10">
             <form onSubmit={handleSubmit}>
               <fieldset className="flex gap-2">
