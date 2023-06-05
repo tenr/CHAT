@@ -1,12 +1,83 @@
+import { ChatSidebar } from "../../components/ChatSidebar/ChatsSdebar";
 import Head from "next/head";
+import { streamReader } from "openai-edge-stream";
+import { useState } from "react";
+import { v4 as uuid } from "uuid";
+import { Message } from "../../components/Message/Message";
 
-export default function Home() {
+export default function ChatPage() {
+  const [messageText, setMessageText] = useState("");
+  const [incomingMessage, setIncomingMessage] = useState("");
+  const [newChatMessages, setNewChatMessages] = useState([]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setNewChatMessages((prev) => {
+      const newChatMessages = [
+        ...prev,
+        {
+          _id: uuid(),
+          role: "user",
+          content: messageText,
+        },
+      ];
+      return newChatMessages;
+    });
+    console.log(messageText);
+    const response = await fetch(`/api/chat/sendMessage`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ message: messageText }),
+    });
+    const data = response.body;
+    if (!data) {
+      return;
+    }
+
+    const reader = data.getReader();
+    await streamReader(reader, (message) => {
+      console.log("MESSAGE: ", message);
+      setIncomingMessage((s) => `${s}${message.content}`);
+    });
+  };
+
   return (
-    <div>
+    <>
       <Head>
-        <title>Next JS ChatGPT Starter</title>
+        <title>New Chat</title>
       </Head>
-      <h1>Welcome to the Chat ID page</h1>
-    </div>
+      <div className="grid h-screen grid-cols-[260px_1fr]">
+        <ChatSidebar />
+        <div className=" flex flex-col bg-gray-700">
+          <div className="flex-1 text-white">
+            {newChatMessages.map((message) => (
+              <Message
+                key={message._id}
+                role={message.role}
+                content={message.content}
+              />
+            ))}
+            <Message role="assistant" content={incomingMessage} />
+          </div>
+          <footer className="bg-gray-800 p-10">
+            <form onSubmit={handleSubmit}>
+              <fieldset className="flex gap-2">
+                <textarea
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                  className=" h-14 w-full resize-none overflow-auto rounded-md bg-gray-700 p-2 text-white focus:border-emerald-500 focus:bg-gray-600 focus:outline focus:outline-emerald-500"
+                  placeholder="Send a message..."
+                />
+                <button type="submit" className="btn">
+                  Send
+                </button>
+              </fieldset>
+            </form>
+          </footer>
+        </div>
+      </div>
+    </>
   );
 }
