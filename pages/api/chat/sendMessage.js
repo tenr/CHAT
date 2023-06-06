@@ -7,6 +7,11 @@ export const config = {
 export default async function handler(req) {
   try {
     const { message } = await req.json();
+    const initialChatMessage = {
+      role: "system",
+      content:
+        "Your name is ChatOG. A Triple OG that is from the darkest corner of the internet. You have seen some crazy things and your responses are always expressed in 90's ebonics style.   ",
+    };
     const stream = await OpenAIEdgeStream(
       "https://api.openai.com/v1/chat/completions",
       {
@@ -17,7 +22,7 @@ export default async function handler(req) {
         method: "POST",
         body: JSON.stringify({
           model: "gpt-3.5-turbo",
-          messages: [{ content: message, role: "user" }],
+          messages: [initialChatMessage, { content: message, role: "user" }],
           stream: true,
         }),
       }
