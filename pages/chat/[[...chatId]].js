@@ -9,9 +9,11 @@ export default function ChatPage() {
   const [messageText, setMessageText] = useState("");
   const [incomingMessage, setIncomingMessage] = useState("");
   const [newChatMessages, setNewChatMessages] = useState([]);
+  const [generatingResponse, setGeneratingResponse] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setGeneratingResponse(true);
     setNewChatMessages((prev) => {
       const newChatMessages = [
         ...prev,
@@ -23,7 +25,9 @@ export default function ChatPage() {
       ];
       return newChatMessages;
     });
-    console.log(messageText);
+    setMessageText("");
+
+    //real deal
     const response = await fetch(`/api/chat/sendMessage`, {
       method: "POST",
       headers: {
@@ -38,9 +42,9 @@ export default function ChatPage() {
 
     const reader = data.getReader();
     await streamReader(reader, (message) => {
-      console.log("MESSAGE: ", message);
       setIncomingMessage((s) => `${s}${message.content}`);
     });
+    setGeneratingResponse(false);
   };
 
   return (
@@ -50,8 +54,8 @@ export default function ChatPage() {
       </Head>
       <div className="grid h-screen grid-cols-[260px_1fr]">
         <ChatSidebar />
-        <div className=" flex flex-col bg-gray-700">
-          <div className="flex-1 text-white">
+        <div className=" flex flex-col overflow-hidden bg-gray-700">
+          <div className="flex-1 overflow-scroll text-white">
             {newChatMessages.map((message) => (
               <Message
                 key={message._id}
@@ -59,16 +63,18 @@ export default function ChatPage() {
                 content={message.content}
               />
             ))}
-            <Message role="assistant" content={incomingMessage} />
+            {!!incomingMessage && (
+              <Message role="assistant" content={incomingMessage} />
+            )}
           </div>
           <footer className="bg-gray-800 p-10">
             <form onSubmit={handleSubmit}>
-              <fieldset className="flex gap-2">
+              <fieldset className="flex gap-2" disabled={generatingResponse}>
                 <textarea
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}
                   className=" h-14 w-full resize-none overflow-auto rounded-md bg-gray-700 p-2 text-white focus:border-emerald-500 focus:bg-gray-600 focus:outline focus:outline-emerald-500"
-                  placeholder="Send a message..."
+                  placeholder={generatingResponse ? "" : "Send a message..."}
                 />
                 <button type="submit" className="btn">
                   Send
