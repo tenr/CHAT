@@ -4,7 +4,7 @@ import { ObjectId } from "mongodb";
 
 export default async function handler(req, res) {
   try {
-    const { user } = await getSession();
+    const { user } = await getSession(req, res);
     const client = await clientPromise;
     const db = client.db("ChatOG");
 
