@@ -10,9 +10,44 @@ export default async function handler(req, res) {
 
     const { chatId, role, content } = req.body;
 
+    let objectId;
+
+    try {
+      objectId = new ObjectId(chatId);
+    } catch (e) {
+      res.status(422).json({
+        message: "Invalid chat ID bro",
+      });
+      return;
+    }
+
+    //validate message data
+
+    if (
+      !content ||
+      typeof content !== "string" ||
+      (role === "user" && content.length > 200) ||
+      (role === "assistant" && content.length > 100000)
+    ) {
+      res.status(422).json({
+        message:
+          "I need some content from you, and it can't be anything too long either homie",
+      });
+      return;
+    }
+
+    //validate role
+
+    if (role !== "user" && role !== "assitant") {
+      res.status(422).json({
+        message: "Role must be either assistant or user homie",
+      });
+      return;
+    }
+
     const chat = await db.collection("chats").findOneAndUpdate(
       {
-        _id: new ObjectId(chatId),
+        _id: objectId,
         userId: user.sub,
       },
       {

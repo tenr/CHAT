@@ -7,6 +7,20 @@ export const config = {
 export default async function handler(req) {
   try {
     const { chatId: chatIdFromParam, message } = await req.json();
+
+    //validate message data
+
+    if (!message || typeof message !== "string" || message.length > 200) {
+      return new Response(
+        {
+          message:
+            "I need a message from you, and it can't be anything too long either homie",
+        },
+        {
+          status: 422,
+        }
+      );
+    }
     let chatId = chatIdFromParam;
     const initialChatMessage = {
       role: "system",
@@ -112,6 +126,14 @@ export default async function handler(req) {
     );
     return new Response(stream);
   } catch (e) {
+    return new Response(
+      {
+        message: "An error happend in send message bro. ",
+      },
+      {
+        status: 500,
+      }
+    );
     console.log("AN ERROR OCCURED IN SENDMESSAGE:", e);
   }
 }

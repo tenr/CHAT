@@ -5,19 +5,28 @@ export default async function handler(req, res) {
   try {
     const { user } = await getSession(req, res);
     const { message } = req.body;
+
+    //validate message data
+
+    if (!message || typeof message !== "string" || message.length > 200) {
+      res.status(422).json({
+        message:
+          "I need a message from you, and it can't be anything too long either homie",
+      });
+      return;
+    }
+
     const newUserMessage = {
       role: "user",
       content: message,
     };
     const client = await clientPromise;
     const db = client.db("ChatOG");
-    const chat = await db
-      .collection("chats")
-      .insertOne({
-        userId: user.sub,
-        messages: [newUserMessage],
-        title: message,
-      });
+    const chat = await db.collection("chats").insertOne({
+      userId: user.sub,
+      messages: [newUserMessage],
+      title: message,
+    });
     res.status(200).json({
       _id: chat.insertedId.toString(),
       messages: [newUserMessage],
