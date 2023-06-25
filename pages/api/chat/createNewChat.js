@@ -8,7 +8,7 @@ export default async function handler(req, res) {
 
     //validate message data
 
-    if (!message || typeof message !== "string" || message.length > 200) {
+    if (!message || typeof message !== "string" || message.length > 2000) {
       res.status(422).json({
         message:
           "I need a message from you, and it can't be anything too long either homie",

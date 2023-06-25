@@ -16,13 +16,12 @@ export default async function handler(req, res) {
       objectId = new ObjectId(chatId);
     } catch (e) {
       res.status(422).json({
-        message: "Invalid chat ID bro",
+        message: "Invalid chat ID",
       });
       return;
     }
 
-    //validate message data
-
+    // validate content data
     if (
       !content ||
       typeof content !== "string" ||
@@ -30,17 +29,15 @@ export default async function handler(req, res) {
       (role === "assistant" && content.length > 100000)
     ) {
       res.status(422).json({
-        message:
-          "I need some content from you, and it can't be anything too long either homie",
+        message: "content is required and must be less than 200 characters",
       });
       return;
     }
 
-    //validate role
-
-    if (role !== "user" && role !== "assitant") {
+    // validate role
+    if (role !== "user" && role !== "assistant") {
       res.status(422).json({
-        message: "Role must be either assistant or user homie",
+        message: "role must be either 'assistant' or 'user'",
       });
       return;
     }
@@ -72,6 +69,6 @@ export default async function handler(req, res) {
   } catch (e) {
     res
       .status(500)
-      .json({ message: "an error occured when adding a message to a chat" });
+      .json({ message: "An error occurred when adding a message to a chat" });
   }
 }
