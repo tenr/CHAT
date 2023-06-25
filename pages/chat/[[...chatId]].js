@@ -178,6 +178,7 @@ export const getServerSideProps = async (ctx) => {
         },
       };
     }
+
     const { user } = await getSession(ctx.req, ctx.res);
     const client = await clientPromise;
     const db = client.db("ChatOG");
@@ -193,6 +194,7 @@ export const getServerSideProps = async (ctx) => {
         },
       };
     }
+
     return {
       props: {
         chatId,
